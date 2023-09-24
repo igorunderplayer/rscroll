@@ -7,7 +7,7 @@ This project is based on [Zscroll](https://github.com/noctuid/zscroll)
 #### Simple usage
 
 ```sh
-$ rscroll "A very long text that you want to apply scroll effet......."
+$ rscroll "A very long text that you want to apply scroll effect......."
 ```
 
 ### Using commands
