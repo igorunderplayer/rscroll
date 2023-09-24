@@ -1,4 +1,4 @@
-use std::{thread::sleep, time::Duration, process::Command};
+use std::{thread::sleep, time::{Duration, self}, process::Command};
 
 use clap::Parser;
 
@@ -16,7 +16,10 @@ struct Args {
     separator: String,
 
     #[arg(short, long, default_value_t = false)]
-    check_command: bool
+    check_command: bool,
+
+    #[arg(short, long, default_value_t = 2)]
+    command_delay: u64
 }
 
 fn main() {
@@ -25,10 +28,14 @@ fn main() {
     let delay = Duration::from_millis(args.delay);
     let sep = args.separator;
 
+    let mut last_check = time::Instant::now();
+
     let mut i = 0;
 
+    let mut text = args.text.to_owned();
+
     loop {
-        let text = if args.check_command {
+        if args.check_command && last_check.elapsed().as_secs() > args.command_delay {
             let yo = Command::new("sh")
             .arg("-c")
             .arg(&args.text)
@@ -36,10 +43,9 @@ fn main() {
             .unwrap();
     
             let t = String::from_utf8(yo.stdout).unwrap();
-            t.trim().to_owned()
-        } else {
-            args.text.trim().to_owned()
-        };
+            text = t.trim().to_string();
+            last_check = time::Instant::now();
+        }
     
         let chars: Vec<char> = text.chars().collect();
 
