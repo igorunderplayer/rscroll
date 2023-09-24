@@ -18,8 +18,8 @@ struct Args {
     #[arg(short, long, default_value_t = false)]
     check_command: bool,
 
-    #[arg(long, default_value_t = 2)]
-    command_delay: u64
+    #[arg(long, default_value_t = 2000)]
+    command_delay: u128
 }
 
 fn main() {
@@ -52,7 +52,7 @@ fn main() {
     }
 
     loop {
-        if args.check_command && last_check.elapsed().as_secs() > args.command_delay {
+        if args.check_command && last_check.elapsed().as_millis() > args.command_delay {
             text = get_command(&args.text);
             text.push_str(&sep);
             last_check = time::Instant::now();
