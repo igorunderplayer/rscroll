@@ -1,4 +1,4 @@
-use std::{thread::sleep, time::{Duration, self}, process::Command};
+use std::{thread::sleep, time::{Duration, self}, process::Command, array, clone};
 
 use clap::Parser;
 
@@ -18,13 +18,13 @@ struct Args {
     #[arg(short, long, default_value_t = false)]
     check_command: bool,
 
-    #[arg(short, long, default_value_t = 2)]
+    #[arg(long, default_value_t = 2)]
     command_delay: u64
 }
 
 fn main() {
     let args = Args::parse();
-    let lenght = args.length;
+    let length = args.length;
     let delay = Duration::from_millis(args.delay);
     let sep = args.separator;
 
@@ -32,44 +32,65 @@ fn main() {
 
     let mut i = 0;
 
-    let mut text = args.text.to_owned();
+    let mut text = if args.check_command {
+        get_command(&args.text)
+    } else {
+        args.text.to_string()
+    };
+
+    text.push_str(&sep);
+
+
+    let clone_chars: Vec<char> = text.chars().collect();
+
+    let mut display_chars = vec!['\0'; length];
+    for char_index in 0..clone_chars.len() {
+        if char_index >= length {
+            break;
+        }
+        display_chars[char_index] = clone_chars[char_index];
+    }
 
     loop {
         if args.check_command && last_check.elapsed().as_secs() > args.command_delay {
-            let yo = Command::new("sh")
-            .arg("-c")
-            .arg(&args.text)
-            .output()
-            .unwrap();
-    
-            let t = String::from_utf8(yo.stdout).unwrap();
-            text = t.trim().to_string();
+            text = get_command(&args.text);
+            text.push_str(&sep);
             last_check = time::Instant::now();
         }
     
         let chars: Vec<char> = text.chars().collect();
 
-
-        if lenght >= chars.len() {
+        if length >= chars.len() {
             println!("{}", text);
         } else {
-            let should_use_sep: bool = if i + lenght  > chars.len() {
-                i = 0;
-                true
-            } else {false};
-            let cut = &chars[i .. lenght + i - should_use_sep as usize * 3];
             println!();
-
-            for char in cut {
+            for char in display_chars.to_owned() {
                 print!("{}", char);
             }
 
-            if should_use_sep {
-                print!("{}", sep)
-            }
-            i += 1;
+            let n = &display_chars[1..];
+            display_chars = n.to_vec();
+
+            if i >= chars.len() {
+                display_chars.push('\0');
+                i = 0;
+            } else {
+                display_chars.push(chars[i]);
+                i += 1;
+            };
         }
 
         sleep(delay)
     }
+}
+
+fn get_command(input: &str) -> String{
+    let yo = Command::new("sh")
+        .arg("-c")
+        .arg(input)
+        .output()
+        .unwrap();
+
+    let t = String::from_utf8(yo.stdout).unwrap();
+    t.trim().to_string()
 }
