@@ -38,10 +38,11 @@ fn main() {
         args.text.to_string()
     };
 
-    text.push_str(&sep);
-
-
     let clone_chars: Vec<char> = text.chars().collect();
+
+    if clone_chars.len() > length {
+        text.push_str(&sep);
+    }
 
     let mut display_chars = vec!['\0'; length];
     for char_index in 0..clone_chars.len() {
@@ -54,7 +55,10 @@ fn main() {
     loop {
         if args.check_command && last_check.elapsed().as_millis() > args.command_delay {
             text = get_command(&args.text);
-            text.push_str(&sep);
+
+            if text.len() > length {
+                text.push_str(&sep);
+            }
             last_check = time::Instant::now();
         }
     
