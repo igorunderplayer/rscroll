@@ -10,7 +10,7 @@ This project is based on [Zscroll](https://github.com/noctuid/zscroll)
 $ rscroll "A very long text that you want to apply scroll effect......."
 ```
 
-### Using commands
+#### Using commands
 
 ```sh
 $ rscroll -c --command-delay 1000 "./get_player_status.sh"

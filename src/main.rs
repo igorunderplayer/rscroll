@@ -1,4 +1,4 @@
-use std::{thread::sleep, time::{Duration, self}, process::Command, array, clone};
+use std::{thread::sleep, time::{Duration, self}, process::Command, array, clone, collections::VecDeque};
 
 use clap::Parser;
 
@@ -32,39 +32,45 @@ fn main() {
 
     let mut i = 0;
 
-    let mut text = if args.check_command {
+    let text = if args.check_command {
         get_command(&args.text)
     } else {
-        args.text.to_string()
+        args.text.to_owned()
     };
 
-    let clone_chars: Vec<char> = text.chars().collect();
+    let mut text_chars: Vec<char> = text.chars().collect();
 
-    if clone_chars.len() > length {
-        text.push_str(&sep);
+    if text_chars.len() > length {
+        for char in sep.chars() {
+            text_chars.push(char)
+        }
     }
 
-    let mut display_chars = vec!['\0'; length];
-    for char_index in 0..clone_chars.len() {
+
+    let mut display_chars = VecDeque::from(vec!['\0'; length]);
+    for char_index in 0..text_chars.len() {
         if char_index >= length {
             break;
         }
-        display_chars[char_index] = clone_chars[char_index];
+        display_chars[char_index] = text_chars[char_index];
+        i = char_index;
     }
 
     loop {
         if args.check_command && last_check.elapsed().as_millis() > args.command_delay {
-            text = get_command(&args.text);
+            let cmd_result_text = get_command(&args.text);
+            text_chars = cmd_result_text.chars().collect();
 
-            if text.len() > length {
-                text.push_str(&sep);
+            if text_chars.len() > length {
+                for char in sep.chars() {
+                    text_chars.push(char)
+                }
             }
+
             last_check = time::Instant::now();
         }
-    
-        let chars: Vec<char> = text.chars().collect();
 
-        if length >= chars.len() {
+        if length >= text_chars.len() {
             println!("{}", text);
         } else {
             println!();
@@ -72,16 +78,16 @@ fn main() {
                 print!("{}", char);
             }
 
-            let n = &display_chars[1..];
-            display_chars = n.to_vec();
+            display_chars.pop_front();
 
-            if i >= chars.len() {
-                display_chars.push('\0');
+            if i >= text_chars.len() {
                 i = 0;
+                display_chars.push_back(text_chars[i]);
             } else {
-                display_chars.push(chars[i]);
-                i += 1;
+                display_chars.push_back(text_chars[i]);  
             };
+
+            i += 1;
         }
 
         sleep(delay)
