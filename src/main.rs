@@ -74,7 +74,7 @@ fn main() {
             println!("{}", text);
         } else {
             println!();
-            for char in display_chars.to_owned() {
+            for char in &display_chars {
                 print!("{}", char);
             }
 
