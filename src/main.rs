@@ -1,4 +1,9 @@
-use std::{thread::sleep, time::{Duration, self}, process::Command, array, clone, collections::VecDeque};
+use std::{
+    collections::VecDeque,
+    process::Command,
+    thread::sleep,
+    time::{self, Duration},
+};
 
 use clap::Parser;
 
@@ -19,25 +24,24 @@ struct Args {
     check_command: bool,
 
     #[arg(long, default_value_t = 2000)]
-    command_delay: u128
+    command_delay: u128,
 }
 
 fn main() {
     let args = Args::parse();
     let length = args.length;
     let delay = Duration::from_millis(args.delay);
-    let sep = args.separator;
+    let sep = &args.separator;
 
     let mut last_check = time::Instant::now();
 
-    let mut i = 0;
-
     let text = if args.check_command {
-        get_command(&args.text)
+        get_result_from_command(&args.text)
     } else {
         args.text.to_owned()
     };
 
+    let mut last_result = text.clone();
     let mut text_chars: Vec<char> = text.chars().collect();
 
     if text_chars.len() > length {
@@ -46,27 +50,35 @@ fn main() {
         }
     }
 
-
-    let mut display_chars = VecDeque::from(vec!['\0'; length]);
-    for char_index in 0..text_chars.len() {
-        if char_index >= length {
-            break;
-        }
-        display_chars[char_index] = text_chars[char_index];
-        i = char_index;
-    }
+    let mut display_chars = create_display_chars(length, &text_chars);
+    let mut i = display_chars.len();
 
     loop {
         if args.check_command && last_check.elapsed().as_millis() > args.command_delay {
-            let cmd_result_text = get_command(&args.text);
-            text_chars = cmd_result_text.chars().collect();
+            let cmd_result_text = get_result_from_command(&args.text);
 
-            if text_chars.len() > length {
-                for char in sep.chars() {
-                    text_chars.push(char)
+            if cmd_result_text != last_result {
+                display_chars.clear();
+                let res_chars: Vec<char> = cmd_result_text.chars().collect();
+
+                text_chars = res_chars.clone();
+
+                if res_chars.len() > length {
+                    text_chars.extend(sep.chars());
                 }
+
+                display_chars.clear();
+
+                if text_chars.len() > length {
+                    display_chars.extend(&text_chars[..length]);
+                } else {
+                    display_chars.extend(&text_chars)
+                }
+
+                i = display_chars.len();
             }
 
+            last_result = cmd_result_text;
             last_check = time::Instant::now();
         }
 
@@ -84,7 +96,7 @@ fn main() {
                 i = 0;
                 display_chars.push_back(text_chars[i]);
             } else {
-                display_chars.push_back(text_chars[i]);  
+                display_chars.push_back(text_chars[i]);
             };
 
             i += 1;
@@ -94,13 +106,21 @@ fn main() {
     }
 }
 
-fn get_command(input: &str) -> String{
-    let yo = Command::new("sh")
-        .arg("-c")
-        .arg(input)
-        .output()
-        .unwrap();
+fn get_result_from_command(input: &str) -> String {
+    let yo = Command::new("sh").arg("-c").arg(input).output().unwrap();
 
     let t = String::from_utf8(yo.stdout).unwrap();
     t.trim().to_string()
+}
+
+fn create_display_chars(length: usize, text_chars: &[char]) -> VecDeque<char> {
+    let mut display_chars = VecDeque::from(vec!['\0'; length]);
+    for char_index in 0..text_chars.len() {
+        if char_index >= length {
+            break;
+        }
+        display_chars[char_index] = text_chars[char_index];
+    }
+
+    display_chars
 }
