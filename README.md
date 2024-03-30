@@ -4,13 +4,13 @@ This project is based on [Zscroll](https://github.com/noctuid/zscroll)
 
 ## Example usage
 
-#### Simple usage
+### Simple usage
 
 ```sh
 $ rscroll "A very long text that you want to apply scroll effect......."
 ```
 
-#### Using commands
+### Using commands
 
 ```sh
 $ rscroll -c --command-delay 1000 "./get_player_status.sh"
@@ -18,7 +18,7 @@ $ rscroll -c --command-delay 1000 "./get_player_status.sh"
 
 ### Options
 
-```
+```sh
   --help           # Show help menu
   --delay          # Delay in milliseconds to update dext
   --length         # Max length to text display
