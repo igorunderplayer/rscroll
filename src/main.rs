@@ -83,7 +83,9 @@ fn main() {
         }
 
         if length >= text_chars.len() {
-            println!("{}", text);
+            for char in &text_chars {
+                print!("{}", char);
+            }
         } else {
             println!();
             for char in &display_chars {
