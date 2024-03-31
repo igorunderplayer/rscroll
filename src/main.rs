@@ -17,7 +17,7 @@ struct Args {
     #[arg(short, long, default_value_t = 30)]
     length: usize,
 
-    #[arg(short, long, default_value_t = (" - ".to_string()))]
+    #[arg(short, long, default_value_t = String::from(" - "))]
     separator: String,
 
     #[arg(short, long, default_value_t = false)]
