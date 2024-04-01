@@ -58,7 +58,6 @@ fn main() {
             let cmd_result_text = get_result_from_command(&args.text);
 
             if cmd_result_text != last_result {
-                display_chars.clear();
                 let res_chars: Vec<char> = cmd_result_text.chars().collect();
 
                 text_chars = res_chars.clone();
@@ -67,12 +66,12 @@ fn main() {
                     text_chars.extend(sep.chars());
                 }
 
-                display_chars.clear();
-
-                if text_chars.len() > length {
-                    display_chars.extend(&text_chars[..length]);
-                } else {
-                    display_chars.extend(&text_chars)
+                for i in 0..length {
+                    if i >= text_chars.len() {
+                        display_chars[i] = '\0';
+                    } else {
+                        display_chars[i] = text_chars[i];
+                    }
                 }
 
                 i = display_chars.len();
@@ -82,12 +81,12 @@ fn main() {
             last_check = time::Instant::now();
         }
 
+        println!();
         if length >= text_chars.len() {
             for char in &text_chars {
                 print!("{}", char);
             }
         } else {
-            println!();
             for char in &display_chars {
                 print!("{}", char);
             }
